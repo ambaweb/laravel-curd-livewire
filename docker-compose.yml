@@ -1,0 +1,58 @@
+version: "3.8"
+services:
+
+#Nginx Service
+  nginx:
+    container_name: "nginx-${APP_NAME}"
+    build: .docker/nginx
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+      - "443:443"
+    networks:
+      - laravel-app-network
+  
+#PHP Service
+  app:
+    container_name: "app-${APP_NAME}"
+    build: .docker/php
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "9000:9000"
+    networks:
+      - laravel-app-network
+
+#Mariadb Service
+  db:
+    container_name: "mariadb-${APP_NAME}"
+    image: mariadb:latest
+    restart: unless-stopped
+    tty: true
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      SERVICE_NAME: db
+    volumes:
+      - .docker/dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - laravel-app-network
+
+#Docker Networks
+networks:
+  laravel-app-network:
+    driver: bridge
+    
+#Volumes
+volumes:
+  dbdata:
+    driver: local
